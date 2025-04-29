@@ -130,14 +130,16 @@ def extract_crop_buildings(label_dirs, image_root, train_image_list, output_crop
             with rasterio.open(pre_image_path) as src:
                 for i, feature in enumerate(xy_features):
                     subtype = feature["properties"].get("subtype")
-                    print(f"Found subtype: {subtype}")
                     if subtype not in LABEL_MAP:
-                        print(f"⚠️ Skipped because unknown subtype: {subtype}")
                         continue
                     try:
                         polygon = wkt.loads(feature["wkt"])
                     except:
                         continue
+
+                    # ここでポリゴン座標の範囲を出力
+                    xs, ys = polygon.exterior.xy
+                    print(f"Polygon {i}: min_x={min(xs)}, max_x={max(xs)}, min_y={min(ys)}, max_y={max(ys)}")
 
                     out_file = f"{disaster_name}_{i}.tif"
                     out_path = os.path.join(output_crop_dir, out_file)
