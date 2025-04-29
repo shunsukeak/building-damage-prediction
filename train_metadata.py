@@ -11,12 +11,13 @@ from tqdm import tqdm
 
 # === パラメータ設定 ===
 label_dirs = [
-    "/mnt/bigdisk/xbd/geotiffs/tier1/labels",
-    "/mnt/bigdisk/xbd/geotiffs/tier3/labels"
+    "./data/geotiffs/tier1/labels",
+    "./data/geotiffs/tier3/labels",
+    "./data/geotiffs/test/labels"
 ]
-image_root = "/mnt/bigdisk/xbd/geotiffs"
+image_root = "./data/geotiffs"
 train_image_list = "./split_lists/train_images.csv"
-output_crop_dir = "/mnt/bigdisk/xbd/cropped_buildings"
+output_crop_dir = "./data/cropped_buildings"
 output_crop_metadata = "./cropped_building_metadata.csv"
 
 DISASTER_NAME_TO_TYPE = {
@@ -121,7 +122,7 @@ def extract_crop_buildings(label_dirs, image_root, train_image_list, output_crop
             fpath = os.path.join(label_dir, fname)
             pre_image = fname.replace("_post_disaster.json", "_pre_disaster.tif")
             pre_image_path = None
-            for tier in ["tier1", "tier3"]:
+            for tier in ["tier1", "tier3", "test"]:
                 candidate = os.path.join(image_root, tier, "images", pre_image)
                 if os.path.exists(candidate):
                     pre_image_path = candidate

@@ -3,7 +3,7 @@ import random
 import pandas as pd
 
 # === パラメータ設定 ===
-pre_image_root = "/mnt/bigdisk/xbd/geotiffs"  # pre-disaster画像があるtier1/tier3のroot
+pre_image_root = "./data/geotiffs"  # pre-disaster画像があるtier1/tier3のroot
 output_dir = "./split_lists"
 train_ratio = 0.8
 random_seed = 42
@@ -11,7 +11,7 @@ random_seed = 42
 # === 画像一覧を取得し、train/testに分割 ===
 def split_images(pre_image_root, output_dir, train_ratio=0.8, random_seed=42):
     pre_images = []
-    for tier in ["tier1", "tier3"]:
+    for tier in ["tier1", "tier3", "test"]:
         image_dir = os.path.join(pre_image_root, tier, "images")
         for fname in os.listdir(image_dir):
             if fname.endswith("_pre_disaster.tif"):

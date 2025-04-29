@@ -76,7 +76,7 @@ def evaluate_test(test_image_list, model_dir, label_dirs, image_root, device):
     for image_id in tqdm(test_images, desc="Testing"):
         # pre-disaster image path
         pre_image_path = None
-        for tier in ["tier1", "tier3"]:
+        for tier in ["tier1", "tier3", "test"]:
             candidate = os.path.join(image_root, tier, "images", f"{image_id}_pre_disaster.tif")
             if os.path.exists(candidate):
                 pre_image_path = candidate
@@ -86,7 +86,7 @@ def evaluate_test(test_image_list, model_dir, label_dirs, image_root, device):
 
         # label file path
         label_path = None
-        for tier in ["tier1", "tier3"]:
+        for tier in ["tier1", "tier3", "test"]:
             candidate = os.path.join(image_root, tier, "labels", f"{image_id}_post_disaster.json")
             if os.path.exists(candidate):
                 label_path = candidate
@@ -184,7 +184,7 @@ def get_hazard_level(disaster_name):
 if __name__ == "__main__":
     test_image_list = "./split_lists/test_images.csv"
     model_dir = "./saved_crop_models"
-    image_root = "/mnt/bigdisk/xbd/geotiffs"
+    image_root = "./data/geotiffs"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     evaluate_test(test_image_list, model_dir, label_dirs=None, image_root=image_root, device=device)
