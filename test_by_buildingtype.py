@@ -1,4 +1,69 @@
-# === 修正: 災害名 → 災害タイプへのマッピング
+import os
+import json
+import pandas as pd
+import torch
+import torch.nn as nn
+import torchvision.models as models
+from torch.utils.data import DataLoader, Dataset
+import cv2
+import rasterio
+from rasterio import mask
+from shapely.geometry import mapping, box
+from shapely import wkt
+from shapely.ops import transform
+import pyproj
+from tqdm import tqdm
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# === reproject_polygon ===
+def reproject_polygon(polygon, from_crs, to_crs):
+    project = pyproj.Transformer.from_crs(from_crs, to_crs, always_xy=True).transform
+    return transform(project, polygon)
+
+# === crop_polygon_from_image (オンザフライcrop) ===
+def crop_polygon_from_image(src, polygon):
+    try:
+        if not polygon.is_valid:
+            return None
+
+        reprojected_polygon = reproject_polygon(polygon, "EPSG:4326", src.crs)
+        img_bounds = box(*src.bounds)
+        if not reprojected_polygon.intersects(img_bounds):
+            return None
+
+        out_image, _ = mask.mask(src, [mapping(reprojected_polygon)], crop=True)
+        img = out_image.transpose(1, 2, 0)
+        if img.shape[2] == 1:
+            img = img.repeat(3, axis=2)
+        return img
+    except:
+        return None
+
+# === ResNet with Hazard (Same as Training) ===
+class ResNetWithHazard(nn.Module):
+    def __init__(self, num_classes=4):
+        super().__init__()
+        self.resnet = models.resnet34(weights="IMAGENET1K_V1")
+        self.resnet.fc = nn.Identity()
+        self.meta_fc = nn.Sequential(
+            nn.Linear(1, 32),
+            nn.ReLU(),
+            nn.Linear(32, 32),
+            nn.ReLU()
+        )
+        self.classifier = nn.Sequential(
+            nn.Linear(512 + 32, 256),
+            nn.ReLU(),
+            nn.Linear(256, num_classes)
+        )
+
+    def forward(self, x_img, x_meta):
+        img_feat = self.resnet(x_img)
+        meta_feat = self.meta_fc(x_meta)
+        feat = torch.cat([img_feat, meta_feat], dim=1)
+        return self.classifier(feat)
+
+# === 災害名から災害タイプへのマッピング ===
 DISASTER_NAME_TO_TYPE = {
     "mexico-earthquake": "earthquake",
     "santa-rosa-wildfire": "wildfire",
@@ -21,7 +86,35 @@ DISASTER_NAME_TO_TYPE = {
     "lower-puna-volcano": "volcanic_eruption"
 }
 
-# === Test推論メイン関数 (修正版)
+# === ヘルパー関数 ===
+def label_to_int(subtype):
+    mapping = {"no-damage": 0, "minor-damage": 1, "major-damage": 2, "destroyed": 3}
+    return mapping.get(subtype, -1)
+
+def get_hazard_level(disaster_name):
+    HAZARD_LEVEL_MAP = {
+        "mexico-earthquake": 5,
+        "santa-rosa-wildfire": 4,
+        "pinery-bushfire": 3,
+        "portugal-wildfire": 4,
+        "woolsey-fire": 4,
+        "midwest-flooding": 4,
+        "nepal-flooding": 3,
+        "hurricane-florence": 5,
+        "hurricane-harvey": 5,
+        "hurricane-matthew": 4,
+        "hurricane-michael": 5,
+        "joplin-tornado": 5,
+        "moore-tornado": 5,
+        "tuscaloosa-tornado": 5,
+        "palu-tsunami": 4,
+        "sunda-tsunami": 3,
+        "guatemala-volcano": 4,
+        "lower-puna-volcano": 3
+    }
+    return HAZARD_LEVEL_MAP.get(disaster_name, 3)
+
+# === Test推論メイン関数 ===
 def evaluate_test(test_image_list, model_dir, image_root, device):
     test_images = pd.read_csv(test_image_list)["image_id"].tolist()
 
@@ -67,9 +160,9 @@ def evaluate_test(test_image_list, model_dir, image_root, device):
                 if crop_img is None:
                     continue
 
-                # 🔵 ここで "災害タイプ" を推定する
+                # 🔵 災害タイプを決定
                 disaster_name = image_id.split("_")[0]
-                disaster_type = DISASTER_NAME_TO_TYPE.get(disaster_name, "wildfire")  # デフォルトwildfireでもOK
+                disaster_type = DISASTER_NAME_TO_TYPE.get(disaster_name, "wildfire")  # default safety
 
                 model_path = os.path.join(model_dir, f"model_type_{disaster_type}.pt")
                 if disaster_type not in model_cache:
@@ -84,7 +177,7 @@ def evaluate_test(test_image_list, model_dir, image_root, device):
                 # 前処理
                 img = cv2.resize(crop_img, (224, 224)).astype("float32") / 255.0
                 img = torch.tensor(img).permute(2, 0, 1).unsqueeze(0).to(device)
-                hazard_level = get_hazard_level(disaster_name)  # これは元の災害名ベースで良い
+                hazard_level = get_hazard_level(disaster_name)
                 hazard_level = torch.tensor([[hazard_level]], dtype=torch.float32).to(device)
 
                 with torch.no_grad():
@@ -96,7 +189,7 @@ def evaluate_test(test_image_list, model_dir, image_root, device):
                 all_preds.append(pred)
                 all_labels.append(label)
 
-    # 結果集計
+    # === 結果まとめ
     acc = accuracy_score(all_labels, all_preds)
     cm = confusion_matrix(all_labels, all_preds)
     report = classification_report(all_labels, all_preds, target_names=["no-damage", "minor", "major", "destroyed"])
@@ -107,10 +200,10 @@ def evaluate_test(test_image_list, model_dir, image_root, device):
     print("\nClassification Report:")
     print(report)
 
-# === 実行例（修正版）
+# === 実行例
 if __name__ == "__main__":
     test_image_list = "./split_lists/test_images.csv"
-    model_dir = "./saved_type_models"  # 🔵 ここもtypeモデル用
+    model_dir = "./saved_type_models"
     image_root = "./data/geotiffs"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
