@@ -4,6 +4,7 @@ import pandas as pd
 import rasterio
 from rasterio import mask
 from shapely import wkt
+from shapely.geometry import mapping
 from tqdm import tqdm
 
 # === パラメータ設定 ===
