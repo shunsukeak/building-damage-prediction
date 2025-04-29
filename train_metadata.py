@@ -104,6 +104,7 @@ def extract_crop_buildings(label_dirs, image_root, train_image_list, output_crop
             full_id = fname.replace("_post_disaster.json", "").lower()
             disaster_name = "_".join(full_id.split("_")[:-1])
             if disaster_name not in train_images:
+                print(f"⚠️ Skipping {full_id} as it's not in the training set.")
                 continue
 
             fpath = os.path.join(label_dir, fname)
@@ -115,11 +116,13 @@ def extract_crop_buildings(label_dirs, image_root, train_image_list, output_crop
                     pre_image_path = candidate
                     break
             if pre_image_path is None:
+                print(f"⚠️ Skipping {full_id} as pre-disaster image not found.")
                 continue
 
             disaster_type = DISASTER_NAME_TO_TYPE.get(disaster_name)
             hazard_level = HAZARD_LEVEL_MAP.get(disaster_name)
             if disaster_type is None or hazard_level is None:
+                print(f"⚠️ Skipping {full_id} as disaster type or hazard level not found.")
                 continue
 
             with open(fpath, "r") as f:
