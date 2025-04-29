@@ -18,33 +18,34 @@ output_crop_dir = "./data/cropped_buildings"
 output_crop_metadata = "./cropped_building_metadata.csv"
 
 DISASTER_NAME_TO_TYPE = {
-    "mexico-city-earthquake": "earthquake",
-    "santa-rosa-wildfire": "wildfire",
-    "pinery-wildfire": "wildfire",
-    "portugal-wildfire": "wildfire",
-    "woolsey-fire": "wildfire",
-    "midwest-floods": "flood",
-    "nepal-flooding": "flood",
-    "hurricane-florence": "hurricane",
-    "hurricane-harvey": "hurricane",
-    "hurricane-matthew": "hurricane",
-    "hurricane-michael": "hurricane",
-    "joplin-tornado": "tornado",
-    "moore-tornado": "tornado",
-    "tuscaloosa-tornado": "tornado",
-    "palu-tsunami": "tsunami",
-    "sunda-tsunami": "tsunami",
-    "guatemala-volcano": "volcanic_eruption",
-    "lower-puna-volcano": "volcanic_eruption"
+    "mexico-earthquake": "earthquake", #
+    "santa-rosa-wildfire": "wildfire", #
+    "pinery-bushfire": "wildfire", #
+    "portugal-wildfire": "wildfire", #
+    "woolsey-fire": "wildfire", #
+    "socal-fire": "wildfire", #
+    "midwest-flooding": "flood", #
+    "nepal-flooding": "flood", #
+    "hurricane-florence": "hurricane", #
+    "hurricane-harvey": "hurricane", #
+    "hurricane-matthew": "hurricane", #
+    "hurricane-michael": "hurricane", #
+    "joplin-tornado": "tornado", #
+    "moore-tornado": "tornado", #
+    "tuscaloosa-tornado": "tornado", #
+    "palu-tsunami": "tsunami", #
+    "sunda-tsunami": "tsunami", #
+    "guatemala-volcano": "volcanic_eruption", #
+    "lower-puna-volcano": "volcanic_eruption" #
 }
 
 HAZARD_LEVEL_MAP = {
-    "mexico-city-earthquake": 5,
+    "mexico-earthquake": 5,
     "santa-rosa-wildfire": 4,
-    "pinery-wildfire": 3,
+    "pinery-bushfire": 3,
     "portugal-wildfire": 4,
     "woolsey-fire": 4,
-    "midwest-floods": 4,
+    "midwest-flooding": 4,
     "nepal-flooding": 3,
     "hurricane-florence": 5,
     "hurricane-harvey": 5,
@@ -100,7 +101,8 @@ def extract_crop_buildings(label_dirs, image_root, train_image_list, output_crop
         for fname in tqdm(os.listdir(label_dir), desc=f"Processing {label_dir}"):
             if not fname.endswith(".json"):
                 continue
-            disaster_name = fname.replace("_post_disaster.json", "").lower()
+            full_id = fname.replace("_post_disaster.json", "").lower()
+            disaster_name = "_".join(full_id.split("_")[:-1])
             if disaster_name not in train_images:
                 continue
 
