@@ -122,10 +122,9 @@ def plot_training_curves(train_losses, val_accuracies, save_dir, disaster_type):
     print(f"📈 Saved accuracy curve: {acc_path}")
 
 # === Fine-tuning function ===
-def train_one_type(train_csv, val_csv, disaster_type, save_dir, device, epochs=10):
+def train_one_type(train_csv, val_csv, disaster_type, save_dir, device, epochs=30, patience=5):
     print(f"🔵 Training disaster type: {disaster_type}")
 
-    # ✅ ここで train/val 分けたデータをそれぞれ使う
     train_dataset = CropBuildingDatasetWithShape(train_csv)
     val_dataset = CropBuildingDatasetWithShape(val_csv)
 
@@ -139,6 +138,7 @@ def train_one_type(train_csv, val_csv, disaster_type, save_dir, device, epochs=1
     best_val_acc = 0.0
     train_losses = []
     val_accuracies = []
+    no_improve_epochs = 0  # 👈 追加
 
     for epoch in range(epochs):
         model.train()
@@ -162,7 +162,7 @@ def train_one_type(train_csv, val_csv, disaster_type, save_dir, device, epochs=1
         train_losses.append(total_loss)
         print(f"✅ Epoch {epoch+1} Train Loss={total_loss:.4f}, Train Acc={train_acc:.4f}")
 
-        # Validation
+        # --- Validation
         model.eval()
         val_correct, val_total = 0, 0
         with torch.no_grad():
@@ -177,15 +177,88 @@ def train_one_type(train_csv, val_csv, disaster_type, save_dir, device, epochs=1
         val_accuracies.append(val_acc)
         print(f"🧪 Epoch {epoch+1} Val Acc={val_acc:.4f}")
 
+        # --- Early Stopping条件判定
         if val_acc > best_val_acc:
             best_val_acc = val_acc
+            no_improve_epochs = 0  # 👈 リセット
             os.makedirs(save_dir, exist_ok=True)
             model_path = os.path.join(save_dir, f"model_type_{disaster_type}.pt")
             torch.save(model.state_dict(), model_path)
             print(f"💾 Saved best model for type {disaster_type} at {model_path}")
+        else:
+            no_improve_epochs += 1
+            print(f"⏳ No improvement for {no_improve_epochs} epoch(s).")
 
-    # === 最後に学習曲線を保存
+        if no_improve_epochs >= patience:
+            print(f"⛔ Early stopping at epoch {epoch+1}")
+            break
+
+    # 最後に曲線プロット
     plot_training_curves(train_losses, val_accuracies, save_dir, disaster_type)
+# def train_one_type(train_csv, val_csv, disaster_type, save_dir, device, epochs=10):
+#     print(f"🔵 Training disaster type: {disaster_type}")
+
+#     # ✅ ここで train/val 分けたデータをそれぞれ使う
+#     train_dataset = CropBuildingDatasetWithShape(train_csv)
+#     val_dataset = CropBuildingDatasetWithShape(val_csv)
+
+#     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+#     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+
+#     model = ResNetWithHazardAndShape().to(device)
+#     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+#     criterion = nn.CrossEntropyLoss()
+
+#     best_val_acc = 0.0
+#     train_losses = []
+#     val_accuracies = []
+
+#     for epoch in range(epochs):
+#         model.train()
+#         total_loss, correct, total = 0, 0, 0
+
+#         for img, hazard, shape, label in tqdm(train_loader, desc=f"Epoch {epoch+1} - Train"):
+#             img, hazard, shape, label = img.to(device), hazard.to(device), shape.to(device), label.to(device)
+
+#             optimizer.zero_grad()
+#             output = model(img, hazard, shape)
+#             loss = criterion(output, label)
+#             loss.backward()
+#             optimizer.step()
+
+#             total_loss += loss.item()
+#             pred = output.argmax(dim=1)
+#             correct += (pred == label).sum().item()
+#             total += label.size(0)
+
+#         train_acc = correct / total
+#         train_losses.append(total_loss)
+#         print(f"✅ Epoch {epoch+1} Train Loss={total_loss:.4f}, Train Acc={train_acc:.4f}")
+
+#         # Validation
+#         model.eval()
+#         val_correct, val_total = 0, 0
+#         with torch.no_grad():
+#             for img, hazard, shape, label in tqdm(val_loader, desc=f"Epoch {epoch+1} - Val"):
+#                 img, hazard, shape, label = img.to(device), hazard.to(device), shape.to(device), label.to(device)
+#                 output = model(img, hazard, shape)
+#                 pred = output.argmax(dim=1)
+#                 val_correct += (pred == label).sum().item()
+#                 val_total += label.size(0)
+
+#         val_acc = val_correct / val_total
+#         val_accuracies.append(val_acc)
+#         print(f"🧪 Epoch {epoch+1} Val Acc={val_acc:.4f}")
+
+#         if val_acc > best_val_acc:
+#             best_val_acc = val_acc
+#             os.makedirs(save_dir, exist_ok=True)
+#             model_path = os.path.join(save_dir, f"model_type_{disaster_type}.pt")
+#             torch.save(model.state_dict(), model_path)
+#             print(f"💾 Saved best model for type {disaster_type} at {model_path}")
+
+#     # === 最後に学習曲線を保存
+#     plot_training_curves(train_losses, val_accuracies, save_dir, disaster_type)
 
 # === 実行例 ===
 if __name__ == "__main__":
