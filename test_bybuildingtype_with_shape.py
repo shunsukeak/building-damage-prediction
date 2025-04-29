@@ -104,6 +104,7 @@ DISASTER_NAME_TO_TYPE = {
     "pinery-bushfire": "wildfire",
     "portugal-wildfire": "wildfire",
     "woolsey-fire": "wildfire",
+    "socal-fire": "wildfire",
     "midwest-flooding": "flood",
     "nepal-flooding": "flood",
     "hurricane-florence": "hurricane",

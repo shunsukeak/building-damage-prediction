@@ -1,4 +1,4 @@
-# 1-5. test
+##
 import os
 import json
 import pandas as pd
@@ -165,6 +165,7 @@ def get_hazard_level(disaster_name):
         "pinery-wildfire": 3,
         "portugal-wildfire": 4,
         "woolsey-fire": 4,
+        "socal-fire": 4,
         "midwest-floods": 4,
         "nepal-flooding": 3,
         "hurricane-florence": 5,

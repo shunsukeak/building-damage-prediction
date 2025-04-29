@@ -1,3 +1,4 @@
+# 2-5. resnet finetuning with shape
 import os
 import pandas as pd
 import torch
@@ -29,8 +30,25 @@ class CropBuildingDatasetWithShape(Dataset):
         img = img.astype("float32") / 255.0
         return img
 
+    # def __getitem__(self, idx):
+    #     img = self._load_image(self.image_paths[idx])
+    #     label = torch.tensor(self.labels[idx], dtype=torch.long)
+    #     hazard_level = torch.tensor([self.hazard_levels[idx]], dtype=torch.float32)
+    #     shape_feat = torch.tensor(self.shape_features[idx], dtype=torch.float32)
+
+    #     if self.transform:
+    #         img = self.transform(img)
+    #     else:
+    #         img = torch.tensor(img).permute(2, 0, 1)
+
+    #     return img, hazard_level, shape_feat, label
     def __getitem__(self, idx):
-        img = self._load_image(self.image_paths[idx])
+        try:
+            img = self._load_image(self.image_paths[idx])
+        except Exception as e:
+            print(f"⚠️ Skipping broken/missing image: {self.image_paths[idx]}")
+            return self.__getitem__((idx + 1) % len(self))
+
         label = torch.tensor(self.labels[idx], dtype=torch.long)
         hazard_level = torch.tensor([self.hazard_levels[idx]], dtype=torch.float32)
         shape_feat = torch.tensor(self.shape_features[idx], dtype=torch.float32)

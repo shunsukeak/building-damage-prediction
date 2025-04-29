@@ -1,4 +1,4 @@
-# 1-3 (2-2). data processing for resnet finetuning
+# 1-3. data processing for resnet finetuning
 import os
 import pandas as pd
 import random

@@ -1,4 +1,4 @@
-# 2-3 (2-1) adding shape features
+# 2-3 adding shape features
 import pandas as pd
 from shapely import wkt
 from tqdm import tqdm

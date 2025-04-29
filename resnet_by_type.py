@@ -1,4 +1,4 @@
-# 1-4. fine tune resnet 
+# 1-4. resnet finetuning
 import os
 import pandas as pd
 import torch
