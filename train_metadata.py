@@ -70,6 +70,10 @@ LABEL_MAP = {
 def crop_polygon_from_image(src, polygon, out_path):
     try:
         out_image, out_transform = mask.mask(src, [polygon], crop=True)
+        if out_image.shape[1] == 0 or out_image.shape[2] == 0:
+            print(f"⚠️ Skipping empty crop for {out_path}")
+            return False
+
         out_meta = src.meta.copy()
         out_meta.update({
             "driver": "GTiff",
@@ -79,11 +83,11 @@ def crop_polygon_from_image(src, polygon, out_path):
         })
         with rasterio.open(out_path, "w", **out_meta) as dest:
             dest.write(out_image)
+        print(f"✅ Cropped: {out_path}")
         return True
     except Exception as e:
         print(f"⚠️ Error cropping: {e}")
         return False
-
 # === メイン処理 ===
 def extract_crop_buildings(label_dirs, image_root, train_image_list, output_crop_dir, output_crop_metadata):
     os.makedirs(output_crop_dir, exist_ok=True)
