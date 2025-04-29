@@ -100,12 +100,14 @@ def extract_crop_buildings(label_dirs, image_root, train_image_list, output_crop
     for label_dir in label_dirs:
         for fname in tqdm(os.listdir(label_dir), desc=f"Processing {label_dir}"):
             if not fname.endswith(".json"):
+                print(f"⚠️ Skipping non-JSON file: {fname}")
                 continue
             full_id = fname.replace("_post_disaster.json", "").lower()
-            disaster_name = "_".join(full_id.split("_")[:-1])
-            if disaster_name not in train_images:
-                print(f"⚠️ Skipping {full_id} as it's not in the training set.")
+            if full_id not in train_images:
+                print(f"⚠️ Skipping non-train image: {full_id}")
                 continue
+
+            disaster_name = "_".join(full_id.split("_")[:-1])
 
             fpath = os.path.join(label_dir, fname)
             pre_image = fname.replace("_post_disaster.json", "_pre_disaster.tif")
