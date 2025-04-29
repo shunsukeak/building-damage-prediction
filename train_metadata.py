@@ -130,7 +130,9 @@ def extract_crop_buildings(label_dirs, image_root, train_image_list, output_crop
             with rasterio.open(pre_image_path) as src:
                 for i, feature in enumerate(xy_features):
                     subtype = feature["properties"].get("subtype")
+                    print(f"Found subtype: {subtype}")
                     if subtype not in LABEL_MAP:
+                        print(f"⚠️ Skipped because unknown subtype: {subtype}")
                         continue
                     try:
                         polygon = wkt.loads(feature["wkt"])
