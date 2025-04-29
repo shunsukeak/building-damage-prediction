@@ -1,4 +1,4 @@
-# 1-2. 2-2 adding metadata
+# 1-2. adding metadata
 import os
 import json
 import pandas as pd

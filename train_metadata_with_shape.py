@@ -19,7 +19,7 @@ label_dirs = [
 image_root = "./data/geotiffs"
 train_image_list = "./split_lists/train_images.csv"
 output_crop_dir = "./data/cropped_buildings"
-output_crop_metadata = "./cropped_building_metadata.csv"
+output_crop_metadata = "./cropped_building_metadata_with_preshape.csv"
 
 DISASTER_NAME_TO_TYPE = {
     "mexico-earthquake": "earthquake",

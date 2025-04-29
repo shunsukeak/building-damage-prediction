@@ -4,7 +4,7 @@ from shapely import wkt
 from tqdm import tqdm
 
 # === 入力/出力ファイル設定 ===
-input_csv = "./cropped_building_metadata.csv"
+input_csv = "./cropped_building_metadata_with_preshape.csv"
 output_csv = "./cropped_building_metadata_with_shapes.csv"
 
 # === ポリゴンからshape featureを計算する関数 ===
