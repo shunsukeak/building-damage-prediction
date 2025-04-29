@@ -1,10 +1,13 @@
+# 1-3 (2-2). data processing for resnet finetuning
 import os
 import pandas as pd
 import random
 
 # === パラメータ設定 ===
-crop_metadata_csv = "./cropped_building_metadata.csv"
-output_dir = "./type_train_val_split"
+# crop_metadata_csv = "./cropped_building_metadata.csv" #1
+crop_metadata_csv = "./cropped_building_metadata_with_shapes.csv" #2
+# output_dir = "./type_train_val_split" #1
+output_dir = "./type_train_val_split_with_shape" #2
 train_ratio = 0.8
 random_seed = 42
 
