@@ -45,6 +45,7 @@ class CropBuildingDatasetWithShape(Dataset):
     def __getitem__(self, idx):
         try:
             img = self._load_image(self.image_paths[idx])
+            print(f"✅ Loaded image: {self.image_paths[idx]}")
         except Exception as e:
             print(f"⚠️ Skipping broken/missing image: {self.image_paths[idx]}")
             return self.__getitem__((idx + 1) % len(self))
