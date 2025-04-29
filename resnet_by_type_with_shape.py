@@ -271,4 +271,4 @@ if __name__ == "__main__":
     for disaster_type in type_list:
         train_csv = os.path.join(train_val_dir, f"train_{disaster_type}.csv")
         val_csv = os.path.join(train_val_dir, f"val_{disaster_type}.csv")
-        train_one_type(train_csv, val_csv, disaster_type, save_dir, device, epochs=10)
+        train_one_type(train_csv, val_csv, disaster_type, save_dir, device, epochs=30)
