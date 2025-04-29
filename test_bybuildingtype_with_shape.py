@@ -82,6 +82,7 @@ def get_hazard_level(disaster_name):
         "pinery-bushfire": 3,
         "portugal-wildfire": 4,
         "woolsey-fire": 4,
+        "socal-fire": 4,
         "midwest-flooding": 4,
         "nepal-flooding": 3,
         "hurricane-florence": 5,

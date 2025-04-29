@@ -4,10 +4,10 @@ import pandas as pd
 import random
 
 # === パラメータ設定 ===
-crop_metadata_csv = "./cropped_building_metadata.csv" #1
-# crop_metadata_csv = "./cropped_building_metadata_with_shapes.csv" #2
-output_dir = "./type_train_val_split" #1
-# output_dir = "./type_train_val_split_with_shape" #2
+# crop_metadata_csv = "./cropped_building_metadata.csv" #1
+crop_metadata_csv = "./cropped_building_metadata_with_shapes.csv" #2
+# output_dir = "./type_train_val_split" #1
+output_dir = "./type_train_val_split_with_shape" #2
 train_ratio = 0.8
 random_seed = 42
 
