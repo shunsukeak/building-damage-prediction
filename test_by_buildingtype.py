@@ -13,6 +13,8 @@ from shapely import wkt
 from shapely.ops import transform
 import pyproj
 from tqdm import tqdm
+from collections import defaultdict
+import numpy as np
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 # === reproject_polygon ===
@@ -115,13 +117,102 @@ def get_hazard_level(disaster_name):
     return HAZARD_LEVEL_MAP.get(disaster_name, 3)
 
 # === Test推論メイン関数 ===
+# def evaluate_test(test_image_list, model_dir, image_root, device):
+#     test_images = pd.read_csv(test_image_list)["image_id"].tolist()
+
+#     all_preds = []
+#     all_labels = []
+
+#     model_cache = {}
+
+#     for image_id in tqdm(test_images, desc="Testing"):
+#         pre_image_path = None
+#         for tier in ["tier1", "tier3", "test"]:
+#             candidate = os.path.join(image_root, tier, "images", f"{image_id}_pre_disaster.tif")
+#             if os.path.exists(candidate):
+#                 pre_image_path = candidate
+#                 break
+#         if pre_image_path is None:
+#             continue
+
+#         label_path = None
+#         for tier in ["tier1", "tier3", "test"]:
+#             candidate = os.path.join(image_root, tier, "labels", f"{image_id}_post_disaster.json")
+#             if os.path.exists(candidate):
+#                 label_path = candidate
+#                 break
+#         if label_path is None:
+#             continue
+
+#         with rasterio.open(pre_image_path) as src:
+#             with open(label_path, "r") as f:
+#                 label_data = json.load(f)
+
+#             for feature in label_data.get("features", {}).get("lng_lat", []):
+#                 subtype = feature["properties"].get("subtype")
+#                 if subtype not in ["no-damage", "minor-damage", "major-damage", "destroyed"]:
+#                     continue
+
+#                 try:
+#                     polygon = wkt.loads(feature["wkt"])
+#                 except:
+#                     continue
+
+#                 crop_img = crop_polygon_from_image(src, polygon)
+#                 if crop_img is None:
+#                     continue
+
+#                 # 🔵 災害タイプを決定
+#                 disaster_name = image_id.split("_")[0]
+#                 disaster_type = DISASTER_NAME_TO_TYPE.get(disaster_name, "wildfire")  # default safety
+
+#                 model_path = os.path.join(model_dir, f"model_type_{disaster_type}.pt")
+#                 if disaster_type not in model_cache:
+#                     model = ResNetWithHazard()
+#                     model.load_state_dict(torch.load(model_path, map_location=device))
+#                     model.to(device)
+#                     model.eval()
+#                     model_cache[disaster_type] = model
+#                 else:
+#                     model = model_cache[disaster_type]
+
+#                 # 前処理
+#                 img = cv2.resize(crop_img, (224, 224)).astype("float32") / 255.0
+#                 img = torch.tensor(img).permute(2, 0, 1).unsqueeze(0).to(device)
+#                 hazard_level = get_hazard_level(disaster_name)
+#                 hazard_level = torch.tensor([[hazard_level]], dtype=torch.float32).to(device)
+
+#                 with torch.no_grad():
+#                     output = model(img, hazard_level)
+#                     pred = output.argmax(dim=1).item()
+
+#                 label = label_to_int(subtype)
+
+#                 all_preds.append(pred)
+#                 all_labels.append(label)
+
+#     # === 結果まとめ
+#     acc = accuracy_score(all_labels, all_preds)
+#     cm = confusion_matrix(all_labels, all_preds)
+#     report = classification_report(all_labels, all_preds, target_names=["no-damage", "minor", "major", "destroyed"])
+
+#     print(f"✅ Test Accuracy: {acc:.4f}")
+#     print("\nConfusion Matrix:")
+#     print(cm)
+#     print("\nClassification Report:")
+#     print(report)
 def evaluate_test(test_image_list, model_dir, image_root, device):
     test_images = pd.read_csv(test_image_list)["image_id"].tolist()
 
     all_preds = []
     all_labels = []
+    all_image_ids = []
 
     model_cache = {}
+
+    # === 画像単位集計用 ===
+    image_pred_dict = defaultdict(list)
+    image_label_dict = defaultdict(list)
 
     for image_id in tqdm(test_images, desc="Testing"):
         pre_image_path = None
@@ -160,9 +251,9 @@ def evaluate_test(test_image_list, model_dir, image_root, device):
                 if crop_img is None:
                     continue
 
-                # 🔵 災害タイプを決定
+                # 災害名と災害タイプ
                 disaster_name = image_id.split("_")[0]
-                disaster_type = DISASTER_NAME_TO_TYPE.get(disaster_name, "wildfire")  # default safety
+                disaster_type = DISASTER_NAME_TO_TYPE.get(disaster_name, "wildfire")  # fallback
 
                 model_path = os.path.join(model_dir, f"model_type_{disaster_type}.pt")
                 if disaster_type not in model_cache:
@@ -186,20 +277,41 @@ def evaluate_test(test_image_list, model_dir, image_root, device):
 
                 label = label_to_int(subtype)
 
+                # === 保存 ===
                 all_preds.append(pred)
                 all_labels.append(label)
+                all_image_ids.append(image_id)
 
-    # === 結果まとめ
+                image_pred_dict[image_id].append(pred)
+                image_label_dict[image_id].append(label)
+
+    # === 建物単位集計 ===
     acc = accuracy_score(all_labels, all_preds)
     cm = confusion_matrix(all_labels, all_preds)
     report = classification_report(all_labels, all_preds, target_names=["no-damage", "minor", "major", "destroyed"])
 
-    print(f"✅ Test Accuracy: {acc:.4f}")
-    print("\nConfusion Matrix:")
+    print(f"\n✅ Test Accuracy (building-level): {acc:.4f}")
+    print("\nConfusion Matrix (building-level):")
     print(cm)
-    print("\nClassification Report:")
+    print("\nClassification Report (building-level):")
     print(report)
 
+    # === 画像単位の集計評価 ===
+    print("\n🖼️ Image-level summary:")
+    image_level_accs = []
+
+    for image_id in sorted(image_pred_dict.keys()):
+        preds = np.array(image_pred_dict[image_id])
+        labels = np.array(image_label_dict[image_id])
+        correct = (preds == labels).sum()
+        total = len(labels)
+        image_acc = correct / total
+        image_level_accs.append(image_acc)
+        print(f"🖼️ {image_id}: Accuracy = {image_acc:.2f} ({correct}/{total})")
+
+    mean_image_acc = np.mean(image_level_accs)
+    print(f"\n📈 Mean Image-level Accuracy: {mean_image_acc:.4f}")
+    
 # === 実行例
 if __name__ == "__main__":
     test_image_list = "./split_lists/test_images.csv"
