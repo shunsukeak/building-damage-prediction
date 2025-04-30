@@ -1,4 +1,4 @@
-# 1-2. adding metadata
+# adding metadata for test (graph)
 import os
 import json
 import pandas as pd
