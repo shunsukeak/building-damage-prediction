@@ -4,7 +4,7 @@ from shapely.geometry import Polygon
 from tqdm import tqdm
 
 # === 入出力設定 ===
-input_csv = "./cropped_building_metadata_with_preshape.csv"  # 事前に作成したcrop metadata + polygon文字列
+input_csv = "./cropped_building_metadata_with_shapes.csv"  # 事前に作成したcrop metadata + polygon文字列
 output_csv = "./all_buildings_for_graph.csv"    # GCN用ノード情報
 
 # === 実行 ===
