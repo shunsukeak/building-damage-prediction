@@ -34,9 +34,9 @@ class GCNClassifier(nn.Module):
 # === テスト対象ノード抽出 ===
 def get_test_mask(df_graph, test_ids):
     def extract_image_id(path):
-        # 例: pinery-bushfire_00000123_14.tif → pinery-bushfire_00000123
         base = os.path.basename(path).replace(".tif", "")
-        return "_".join(base.split("_")[:2])
+        parts = base.split("_")
+        return "_".join(parts[:2]) if len(parts) >= 2 else base
     image_ids = df_graph["image_path"].apply(extract_image_id)
     return image_ids.isin(test_ids)
 
@@ -44,8 +44,14 @@ def get_test_mask(df_graph, test_ids):
 def evaluate_on_test(metadata_csv, test_image_list, graph_dir, model_dir):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     df_all = pd.read_csv(metadata_csv)
+
+    # ヘッダーを飛ばして読み込み
     test_df = pd.read_csv(test_image_list)
-    test_ids = test_df["image_id"].str.lower().tolist()
+    test_ids = test_df["image_id"].dropna().str.lower().tolist()
+    if "image_id" in test_ids:
+        test_ids.remove("image_id")
+
+    print("📌 Test set contains {} unique image IDs".format(len(test_ids)))
 
     all_preds = []
     all_labels = []
@@ -67,9 +73,10 @@ def evaluate_on_test(metadata_csv, test_image_list, graph_dir, model_dir):
         model.load_state_dict(torch.load(model_path, map_location=device))
         model.eval()
 
-        # 対応するメタデータ取得
         df_type = df_all[df_all["disaster_type"] == dtype].reset_index(drop=True)
         mask = get_test_mask(df_type, test_ids)
+
+        print(f"📊 Test buildings in this type: {mask.sum()}")
 
         if mask.sum() == 0:
             print(f"⚠️ No test buildings for {dtype}, skipping.")
@@ -98,11 +105,10 @@ def evaluate_on_test(metadata_csv, test_image_list, graph_dir, model_dir):
     if len(all_preds) == 0:
         print("⚠️ No test predictions available.")
     else:
-        print("Accuracy:", accuracy_score(all_labels, all_preds))
-        print("Confusion Matrix:")
-        print(confusion_matrix(all_labels, all_preds))
-        print("Classification Report:")
-        print(classification_report(all_labels, all_preds, target_names=["no-damage", "minor", "major", "destroyed"]))
+        print("✅ Accuracy:", accuracy_score(all_labels, all_preds))
+        print("✅ Confusion Matrix:\n", confusion_matrix(all_labels, all_preds))
+        print("✅ Classification Report:\n",
+              classification_report(all_labels, all_preds, target_names=["no-damage", "minor", "major", "destroyed"]))
 
 # === 実行 ===
 if __name__ == "__main__":
