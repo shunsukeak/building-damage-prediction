@@ -8,7 +8,7 @@ from sklearn.neighbors import NearestNeighbors
 import numpy as np
 
 # === 入出力パス ===
-input_csv = "./cropped_test_building_metadata.csv"
+input_csv = "./cropped_test_building_metadata_with_shape.csv"
 output_dir = "./graphs_test_only"
 os.makedirs(output_dir, exist_ok=True)
 
