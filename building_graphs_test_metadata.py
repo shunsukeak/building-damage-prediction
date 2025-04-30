@@ -167,7 +167,7 @@ def extract_crop_buildings(label_dirs, image_root, train_image_list, output_crop
                             "disaster_type": disaster_type,
                             "hazard_level": hazard_level,
                             "disaster_name": disaster_name,
-                            "geometry": feature["wkt"]"
+                            "geometry": feature["wkt"]
                         })
 
     df = pd.DataFrame(records)
