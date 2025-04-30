@@ -31,12 +31,16 @@ class GCNClassifier(nn.Module):
         x = self.gcn2(x, edge_index)
         return self.mlp(x)
 
-# === テスト対象ノードの抽出関数 ===
-def get_test_mask(df_graph, df_test_ids):
-    image_ids = df_graph["image_path"].apply(lambda x: os.path.basename(x).replace("_pre_disaster.tif", "").split(".")[0].lower())
-    return image_ids.isin(df_test_ids)
+# === テスト対象ノード抽出 ===
+def get_test_mask(df_graph, test_ids):
+    def extract_image_id(path):
+        # 例: pinery-bushfire_00000123_14.tif → pinery-bushfire_00000123
+        base = os.path.basename(path).replace(".tif", "")
+        return "_".join(base.split("_")[:2])
+    image_ids = df_graph["image_path"].apply(extract_image_id)
+    return image_ids.isin(test_ids)
 
-# === 実行 ===
+# === メイン評価関数 ===
 def evaluate_on_test(metadata_csv, test_image_list, graph_dir, model_dir):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     df_all = pd.read_csv(metadata_csv)
@@ -58,12 +62,12 @@ def evaluate_on_test(metadata_csv, test_image_list, graph_dir, model_dir):
             continue
 
         # グラフ・モデル読み込み
-        g = torch.load(graph_path)
+        g = torch.load(graph_path, weights_only=False)
         model = GCNClassifier().to(device)
         model.load_state_dict(torch.load(model_path, map_location=device))
         model.eval()
 
-        # 該当するノードを絞り込む
+        # 対応するメタデータ取得
         df_type = df_all[df_all["disaster_type"] == dtype].reset_index(drop=True)
         mask = get_test_mask(df_type, test_ids)
 
@@ -80,7 +84,6 @@ def evaluate_on_test(metadata_csv, test_image_list, graph_dir, model_dir):
             out = model(x, edge_index)
             preds = out.argmax(dim=1).cpu().numpy()
 
-        # 評価対象のみ抽出
         y_pred = preds[test_idx]
         y_gt = y_true[test_idx]
 
@@ -92,11 +95,14 @@ def evaluate_on_test(metadata_csv, test_image_list, graph_dir, model_dir):
 
     # === 全体評価 ===
     print("\n📊 Overall GCN Test Evaluation:")
-    print("Accuracy:", accuracy_score(all_labels, all_preds))
-    print("Confusion Matrix:")
-    print(confusion_matrix(all_labels, all_preds))
-    print("Classification Report:")
-    print(classification_report(all_labels, all_preds, target_names=["no-damage", "minor", "major", "destroyed"]))
+    if len(all_preds) == 0:
+        print("⚠️ No test predictions available.")
+    else:
+        print("Accuracy:", accuracy_score(all_labels, all_preds))
+        print("Confusion Matrix:")
+        print(confusion_matrix(all_labels, all_preds))
+        print("Classification Report:")
+        print(classification_report(all_labels, all_preds, target_names=["no-damage", "minor", "major", "destroyed"]))
 
 # === 実行 ===
 if __name__ == "__main__":
