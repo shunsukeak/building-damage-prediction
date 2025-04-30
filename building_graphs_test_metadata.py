@@ -17,7 +17,7 @@ label_dirs = [
     "./data/geotiffs/test/labels"
 ]
 image_root = "./data/geotiffs"
-train_image_list = "./split_lists/test_images.csv"
+test_image_list = "./split_lists/test_images.csv"
 output_crop_dir = "./data/test_cropped_buildings"
 output_crop_metadata = "./cropped_test_building_metadata.csv"
 
@@ -103,10 +103,10 @@ def crop_polygon_from_image(src, polygon, out_path):
         return False
 
 # === メイン処理 ===
-def extract_crop_buildings(label_dirs, image_root, train_image_list, output_crop_dir, output_crop_metadata):
+def extract_crop_buildings(label_dirs, image_root, test_image_list, output_crop_dir, output_crop_metadata):
     os.makedirs(output_crop_dir, exist_ok=True)
 
-    train_images = pd.read_csv(train_image_list)["image_id"].tolist()
+    train_images = pd.read_csv(test_image_list)["image_id"].tolist()
     records = []
 
     for label_dir in label_dirs:
@@ -176,4 +176,4 @@ def extract_crop_buildings(label_dirs, image_root, train_image_list, output_crop
 
 # === 実行 ===
 if __name__ == "__main__":
-    extract_crop_buildings(label_dirs, image_root, train_image_list, output_crop_dir, output_crop_metadata)
+    extract_crop_buildings(label_dirs, image_root, test_image_list, output_crop_dir, output_crop_metadata)

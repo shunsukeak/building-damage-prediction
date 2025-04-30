@@ -6,6 +6,7 @@ from torch_geometric.data import Data
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 import numpy as np
+from shapely import wkt
 
 # === 入出力パス ===
 input_csv = "./cropped_test_building_metadata_with_shape.csv"
@@ -16,7 +17,22 @@ os.makedirs(output_dir, exist_ok=True)
 k_neighbors = 8  # GCNで使う近傍ノード数
 
 # === 読み込み & 正規化器準備 ===
+def add_centroids(df):
+    xs, ys = [], []
+    for g in df["geometry"]:
+        try:
+            poly = wkt.loads(g)
+            centroid = poly.centroid
+            xs.append(centroid.x)
+            ys.append(centroid.y)
+        except:
+            xs.append(0)
+            ys.append(0)
+    df["x"] = xs
+    df["y"] = ys
+    return df
 df = pd.read_csv(input_csv)
+df = add_centroids(df)
 scaler = StandardScaler()
 shape_cols = ["area", "perimeter", "aspect_ratio", "extent_ratio", "convexity"]
 df[shape_cols] = scaler.fit_transform(df[shape_cols])
