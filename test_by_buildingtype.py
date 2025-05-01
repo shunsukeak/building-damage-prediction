@@ -22,7 +22,7 @@ def reproject_polygon(polygon, from_crs, to_crs):
     project = pyproj.Transformer.from_crs(from_crs, to_crs, always_xy=True).transform
     return transform(project, polygon)
 
-# === crop_polygon_from_image (オンザフライcrop) ===
+# === crop_polygon_from_image ===
 def crop_polygon_from_image(src, polygon):
     try:
         if not polygon.is_valid:
@@ -88,7 +88,6 @@ DISASTER_NAME_TO_TYPE = {
     "lower-puna-volcano": "volcanic_eruption"
 }
 
-# === ヘルパー関数 ===
 def label_to_int(subtype):
     mapping = {"no-damage": 0, "minor-damage": 1, "major-damage": 2, "destroyed": 3}
     return mapping.get(subtype, -1)
