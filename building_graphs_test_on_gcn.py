@@ -7,10 +7,12 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 from tqdm import tqdm
 from collections import defaultdict
 import numpy as np
+import pandas as pd
 
 # === 入出力パス ===
 graph_dir = "./graphs_test_only"
 model_dir = "./gcn_models_by_type"
+metadata_csv = "./cropped_test_building_metadata_with_shape.csv "
 
 # === GCNモデル定義 ===
 class GCNClassifier(nn.Module):
@@ -37,6 +39,15 @@ def evaluate():
 
     type_pred_dict = defaultdict(list)
     type_label_dict = defaultdict(list)
+    disaster_name_pred_dict = defaultdict(list)
+    disaster_name_label_dict = defaultdict(list)
+
+    # metadata 読み込み
+    df_meta = pd.read_csv(metadata_csv)
+    img_paths = df_meta["image_path"].tolist()
+    disaster_names = [os.path.basename(path).split("_")[0] for path in img_paths]
+
+    idx = 0
 
     for fname in os.listdir(graph_dir):
         if not fname.endswith("_test.pt"):
@@ -60,8 +71,7 @@ def evaluate():
         y_true = g.y.cpu().numpy()
 
         with torch.no_grad():
-            out = model(x, edge_index)
-            y_pred = out.argmax(dim=1).cpu().numpy()
+            y_pred = model(x, edge_index).argmax(dim=1).cpu().numpy()
 
         acc = accuracy_score(y_true, y_pred)
         print(f"✅ Accuracy: {acc:.4f}")
@@ -70,6 +80,14 @@ def evaluate():
         all_labels.extend(y_true)
         type_pred_dict[dtype].extend(y_pred)
         type_label_dict[dtype].extend(y_true)
+
+        # disaster 名ごとの保存
+        num_nodes = len(y_true)
+        for i in range(num_nodes):
+            disaster_name = disaster_names[idx]
+            disaster_name_pred_dict[disaster_name].append(y_pred[i])
+            disaster_name_label_dict[disaster_name].append(y_true[i])
+            idx += 1
 
     # === 全体評価 ===
     if len(all_preds) == 0:
@@ -82,20 +100,33 @@ def evaluate():
     print("✅ Classification Report:\n",
           classification_report(all_labels, all_preds, target_names=["no-damage", "minor", "major", "destroyed"]))
 
-    # === 災害タイプ単位集計 ===
+    # === 災害タイプ単位 ===
     print("\n🌍 Disaster-type summary:")
-    disaster_accs = []
+    disaster_type_accs = []
     for dtype in sorted(type_pred_dict.keys()):
         preds = np.array(type_pred_dict[dtype])
         labels = np.array(type_label_dict[dtype])
         correct = (preds == labels).sum()
         total = len(labels)
-        disaster_acc = correct / total
-        disaster_accs.append(disaster_acc)
-        print(f"🌍 {dtype}: Accuracy = {disaster_acc:.4f} ({correct}/{total})")
+        acc = correct / total
+        disaster_type_accs.append(acc)
+        print(f"🌍 {dtype}: Accuracy = {acc:.4f} ({correct}/{total})")
+    mean_type_acc = np.mean(disaster_type_accs)
+    print(f"\n📊 Mean Disaster-type Accuracy: {mean_type_acc:.4f}")
 
-    mean_disaster_acc = np.mean(disaster_accs)
-    print(f"\n📊 Mean Disaster-type Accuracy: {mean_disaster_acc:.4f}")
+    # === 災害名単位 ===
+    print("\n🌋 Disaster-name summary:")
+    disaster_name_accs = []
+    for dname in sorted(disaster_name_pred_dict.keys()):
+        preds = np.array(disaster_name_pred_dict[dname])
+        labels = np.array(disaster_name_label_dict[dname])
+        correct = (preds == labels).sum()
+        total = len(labels)
+        acc = correct / total
+        disaster_name_accs.append(acc)
+        print(f"🌋 {dname}: Accuracy = {acc:.4f} ({correct}/{total})")
+    mean_name_acc = np.mean(disaster_name_accs)
+    print(f"\n📊 Mean Disaster-name Accuracy: {mean_name_acc:.4f}")
 
 # === 実行 ===
 if __name__ == "__main__":
