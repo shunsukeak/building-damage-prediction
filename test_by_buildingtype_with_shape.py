@@ -145,8 +145,8 @@ def evaluate_test(test_image_list, model_dir, image_root, device):
 
     disaster_correct = defaultdict(int)
     disaster_total = defaultdict(int)
-    # disaster_name_pred_dict = defaultdict(list)
-    # disaster_name_label_dict = defaultdict(list)
+    disaster_name_pred_dict = defaultdict(list)
+    disaster_name_label_dict = defaultdict(list)
 
     for image_id in tqdm(test_images, desc="Testing"):
         pre_path, label_path = None, None
@@ -201,6 +201,8 @@ def evaluate_test(test_image_list, model_dir, image_root, device):
                 all_image_ids.append(image_id)
                 image_pred_dict[image_id].append(pred)
                 image_label_dict[image_id].append(label)
+                disaster_name_pred_dict[disaster_name].append(pred)
+                disaster_name_label_dict[disaster_name].append(label)
 
                 # === 災害タイプごとの集計
                 if pred == label:
@@ -237,6 +239,19 @@ def evaluate_test(test_image_list, model_dir, image_root, device):
         type_acc = correct / total if total > 0 else 0
         print(f"🌍 {dtype}: {type_acc:.4f} ({correct}/{total})")
 
+    # === 災害名単位集計 ===
+    print("\n🌋 Disaster-name summary:")
+    disaster_name_accs = []
+    for dname in sorted(disaster_name_pred_dict.keys()):
+        preds = np.array(disaster_name_pred_dict[dname])
+        labels = np.array(disaster_name_label_dict[dname])
+        correct = (preds == labels).sum()
+        total = len(labels)
+        dname_acc = correct / total
+        disaster_name_accs.append(dname_acc)
+        print(f"🌋 {dname}: Accuracy = {dname_acc:.4f} ({correct}/{total})")
+    mean_dname_acc = np.mean(disaster_name_accs)
+    print(f"\n📊 Mean Disaster-name Accuracy: {mean_dname_acc:.4f}")
 # === 実行例 ===
 if __name__ == "__main__":
     test_image_list = "./split_lists/test_images.csv"
