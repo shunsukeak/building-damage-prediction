@@ -12,7 +12,7 @@ import pandas as pd
 # === 入出力パス ===
 graph_dir = "./graphs_test_only"
 model_dir = "./gcn_models_by_type"
-metadata_csv = "./cropped_test_building_metadata_with_shape.csv "
+metadata_csv = "./cropped_test_building_metadata_with_shape.csv"
 
 # === GCNモデル定義 ===
 class GCNClassifier(nn.Module):
