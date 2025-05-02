@@ -7,7 +7,7 @@ csv_path = "./cropped_building_metadata.csv"
 df = pd.read_csv(csv_path)
 
 # ラベル列の確認（カラム名が違う場合はここを修正）
-label_column = 'subtype'
+label_column = 'label'
 
 # クラス分布を集計
 class_counts = df[label_column].value_counts().sort_index()
