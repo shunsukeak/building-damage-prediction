@@ -66,8 +66,8 @@ def train_gat(data, model, device, epochs=100, patience=10):
         model.train()
         optimizer.zero_grad()
         out = model(data.x, data.edge_index)
-        # loss = criterion(out, data.y)
-        loss = criterion(out[data.train_mask], data.y[data.train_mask])
+        loss = criterion(out, data.y)
+        # loss = criterion(out[data.train_mask], data.y[data.train_mask])
         loss.backward()
         optimizer.step()
 
