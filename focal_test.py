@@ -263,9 +263,9 @@ def evaluate_test(test_image_list, model_dir, image_root, device):
 
 # === 実行例
 if __name__ == "__main__":
-    test_image_list = "../split_lists/test_images.csv"
-    model_dir = "../focal_saved_type_models"
-    image_root = "../data/geotiffs"
+    test_image_list = "./split_lists/test_images.csv"
+    model_dir = "./focal_saved_type_models"
+    image_root = "./data/geotiffs"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     evaluate_test(test_image_list, model_dir, image_root, device)
