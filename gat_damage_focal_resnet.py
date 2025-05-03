@@ -19,7 +19,7 @@ os.makedirs(output_dir, exist_ok=True)
 class ResNetEncoder(nn.Module):
     def __init__(self):
         super().__init__()
-        base = models.resnet34(weights="IMAGENETK_V1")
+        base = models.resnet34(weights="IMAGENET1K_V1")
         self.encoder = nn.Sequential(*list(base.children())[:-1])  # (B, 512, 1, 1)
 
     def forward(self, x):
