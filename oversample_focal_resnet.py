@@ -1,4 +1,4 @@
-# oversample_focal_test.py
+# oversample_focal_resnet.py
 import os
 import pandas as pd
 import torch
