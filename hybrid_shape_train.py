@@ -1,4 +1,4 @@
-# hybrid_train.py
+# hybrid_shape_train.py
 import os
 import pandas as pd
 import torch
