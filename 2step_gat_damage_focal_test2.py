@@ -11,7 +11,8 @@ import numpy as np
 import pandas as pd
 
 # === 入出力パス ===
-graph_dir = "./2step_graphs_damage_test_only"
+# graph_dir = "./2step_graphs_damage_test_only"
+graph_dir = "./2step_graphs_damage_test_only_label"
 model_dir = "./focal_damage_gat_models_by_type"
 metadata_csv = "./cropped_test_building_metadata_with_shape.csv"
 
