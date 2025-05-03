@@ -10,11 +10,12 @@ from sklearn.metrics import classification_report
 
 # === 入出力パス ===
 graph_dir = "./graphs_with_image"
-save_dir = "./focal_gat_models_by_type"
+# save_dir = "./focal_gat_models_by_type"
+save_dir = "./focal3_gat_models_by_type"
 os.makedirs(save_dir, exist_ok=True)
 
 class FocalLoss(nn.Module):
-    def __init__(self, alpha=None, gamma=2):
+    def __init__(self, alpha=None, gamma=3): # default: 2
         super(FocalLoss, self).__init__()
         self.alpha = alpha
         self.gamma = gamma
