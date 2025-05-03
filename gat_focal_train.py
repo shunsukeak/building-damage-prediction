@@ -114,7 +114,7 @@ def main():
         data = torch.load(path)
 
         model = GATClassifier()
-        model = train_gat(data, model, device, epochs=100, patience=10)
+        model = train_gat(data, model, device, epochs=1000, patience=10)
 
         model_path = os.path.join(save_dir, f"gat_{dtype}.pt")
         torch.save(model.state_dict(), model_path)
