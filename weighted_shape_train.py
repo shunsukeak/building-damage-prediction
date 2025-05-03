@@ -110,7 +110,12 @@ def plot_training_curves(train_losses, val_accuracies, save_dir, disaster_type):
 # === Fine-tuning function ===
 def train_one_type(train_csv, val_csv, disaster_type, save_dir, device, epochs=30, patience=5):
     print(f"🔵 Training disaster type: {disaster_type}")
+    train_dataset = CropBuildingDatasetWithShape(train_csv)
+    val_dataset = CropBuildingDatasetWithShape(val_csv)
 
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+    
     train_df = pd.read_csv(train_csv)
     class_counts = train_df["label"].value_counts().sort_index().values
     class_counts = torch.tensor(class_counts, dtype=torch.float)
