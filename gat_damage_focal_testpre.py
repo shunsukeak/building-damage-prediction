@@ -8,7 +8,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 import numpy as np
 from shapely import wkt
-
 # === 入出力 ===
 input_csv = "./cropped_test_building_metadata_with_shape.csv"
 output_dir = "./graphs_damage_test_only"
@@ -48,14 +47,14 @@ for dtype in types:
         print(f"⚠️ Skipping {dtype} (not enough nodes)")
         continue
 
-    # ノード特徴量（画像 + shape + hazard）
+    # ノード特徴量（画像 + shape + hazard + neighbor dummy）
     x_feats = []
     for _, row in df_type.iterrows():
-        # dummy image vector (512 dim), normally from ResNet
-        img_vec = np.random.randn(512)
+        img_vec = np.random.randn(512)  # ResNetダミー
         shape_vec = row[shape_cols].values.astype("float32")
         hazard = np.array([row["hazard_level"]], dtype="float32")
-        x_feats.append(np.concatenate([img_vec, shape_vec, hazard]))
+        neighbor_ratios = np.zeros(3, dtype="float32")  # ★ゼロ埋め追加
+        x_feats.append(np.concatenate([img_vec, shape_vec, hazard, neighbor_ratios]))
 
     x_tensor = torch.tensor(np.vstack(x_feats), dtype=torch.float)
 
@@ -79,3 +78,43 @@ for dtype in types:
     out_path = os.path.join(output_dir, f"graph_{dtype}_test.pt")
     torch.save(data, out_path)
     print(f"✅ Saved test graph: {out_path} ({len(df_type)} buildings)")
+# types = df["disaster_type"].unique()
+# print(f"📌 Disaster types (test): {types}")
+
+# for dtype in types:
+#     df_type = df[df["disaster_type"] == dtype].reset_index(drop=True)
+#     if len(df_type) < 2:
+#         print(f"⚠️ Skipping {dtype} (not enough nodes)")
+#         continue
+
+#     # ノード特徴量（画像 + shape + hazard）
+#     x_feats = []
+#     for _, row in df_type.iterrows():
+#         # dummy image vector (512 dim), normally from ResNet
+#         img_vec = np.random.randn(512)
+#         shape_vec = row[shape_cols].values.astype("float32")
+#         hazard = np.array([row["hazard_level"]], dtype="float32")
+#         x_feats.append(np.concatenate([img_vec, shape_vec, hazard]))
+
+#     x_tensor = torch.tensor(np.vstack(x_feats), dtype=torch.float)
+
+#     # エッジ作成（k-NN）
+#     coords = df_type[["x", "y"]].values
+#     knn = NearestNeighbors(n_neighbors=min(k_neighbors + 1, len(df_type)), algorithm='ball_tree')
+#     knn.fit(coords)
+#     edge_index = []
+#     for i, neighbors in enumerate(knn.kneighbors(return_distance=False)):
+#         for j in neighbors[1:]:  # skip self
+#             edge_index.append([i, j])
+#     edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
+
+#     # ラベル
+#     y = torch.tensor(df_type["label"].values, dtype=torch.long)
+
+#     # graph作成
+#     data = Data(x=x_tensor, edge_index=edge_index, y=y)
+
+#     # 保存
+#     out_path = os.path.join(output_dir, f"graph_{dtype}_test.pt")
+#     torch.save(data, out_path)
+#     print(f"✅ Saved test graph: {out_path} ({len(df_type)} buildings)")
