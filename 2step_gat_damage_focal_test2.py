@@ -17,7 +17,7 @@ metadata_csv = "./cropped_test_building_metadata_with_shape.csv"
 
 # === GATモデル定義 ===
 class GATClassifier(nn.Module):
-    def __init__(self, in_dim=521, hidden_dim=128, out_dim=4, heads=4, dropout=0.6):
+    def __init__(self, in_dim=521, hidden_dim=128, out_dim=4, heads=4, dropout=0.3):
         super().__init__()
         self.gat1 = GATConv(in_dim, hidden_dim, heads=heads, dropout=dropout)
         self.gat2 = GATConv(hidden_dim * heads, hidden_dim, heads=1, concat=False, dropout=dropout)
