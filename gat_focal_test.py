@@ -11,7 +11,7 @@ import pandas as pd
 
 # === 入出力パス ===
 graph_dir = "./graphs_test_only"
-model_dir = "./focal3_gat_models_by_type"  # 保存先はGCNと分けると混乱しにくい
+model_dir = "./focal4_gat_models_by_type"  # 保存先はGCNと分けると混乱しにくい
 metadata_csv = "./cropped_test_building_metadata_with_shape.csv"
 
 # === GATモデル定義 ===
