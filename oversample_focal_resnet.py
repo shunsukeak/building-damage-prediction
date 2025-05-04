@@ -122,7 +122,7 @@ def plot_training_curves(train_losses, val_accuracies, save_dir, disaster_type):
     print(f"📈 Saved accuracy curve: {acc_path}")
 
 # === Fine-tuning function ===
-def train_one_type(train_csv, val_csv, disaster_type, save_dir, device, epochs=30, patience=5):
+def train_one_type(train_csv, val_csv, disaster_type, save_dir, device, epochs=30, patience=3):
     print(f"🔵 Training disaster type: {disaster_type}")
 
     train_dataset = CropBuildingDatasetWithShape(train_csv)
@@ -199,7 +199,10 @@ if __name__ == "__main__":
     save_dir = "./oversample_focal_saved_type_models_with_shape"
 
     type_list = [f.replace("train_", "").replace(".csv", "") for f in os.listdir(train_val_dir) if f.startswith("train_")]
-
+    ######
+    completed = {"earthquake", "hurricane", "wildfire"}
+    type_list = [t for t in type_list if t not in completed]
+    ######
     for disaster_type in type_list:
         train_csv = os.path.join(train_val_dir, f"train_{disaster_type}.csv")
         val_csv = os.path.join(train_val_dir, f"val_{disaster_type}.csv")
