@@ -7,10 +7,12 @@ import torchvision.models as models
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
-import cv2
 import torch.nn.functional as F
 import sys
-sys.stderr = open(os.devnull, 'w')
+import contextlib
+# sys.stderr = open(os.devnull, 'w')
+with open(os.devnull, 'w') as f, contextlib.redirect_stderr(f):
+    import cv2
 # cv2.setLogLevel(cv2.LOG_LEVEL_ERROR)
 
 # === Focal Loss クラス ===
