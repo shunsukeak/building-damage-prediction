@@ -9,8 +9,9 @@ from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 import cv2
 import torch.nn.functional as F
-
-cv2.setLogLevel(cv2.LOG_LEVEL_ERROR)
+import sys
+sys.stderr = open(os.devnull, 'w')
+# cv2.setLogLevel(cv2.LOG_LEVEL_ERROR)
 
 # === Focal Loss クラス ===
 class FocalLoss(nn.Module):
