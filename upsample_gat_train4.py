@@ -106,21 +106,22 @@ def evaluate_gat(data, model, device):
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     for fname in os.listdir(graph_dir):
-        if not fname.endswith(".pt"): continue
-        path = os.path.join(graph_dir, fname)
-        dtype = fname.replace("graph_", "").replace(".pt", "")
+        if fname == "graph_flood.pt" or fname == "graph_tornado.pt" or fname == "graph_hurricane.pt":
+            if not fname.endswith(".pt"): continue
+            path = os.path.join(graph_dir, fname)
+            dtype = fname.replace("graph_", "").replace(".pt", "")
 
-        print(f"\n🚀 Training GAT for disaster type: {dtype}")
-        data = torch.load(path)
+            print(f"\n🚀 Training GAT for disaster type: {dtype}")
+            data = torch.load(path)
 
-        model = GATClassifier()
-        model = train_gat(data, model, device, epochs=1000, patience=10)
+            model = GATClassifier()
+            model = train_gat(data, model, device, epochs=1000, patience=10)
 
-        model_path = os.path.join(save_dir, f"gat_{dtype}.pt")
-        torch.save(model.state_dict(), model_path)
-        print(f"💾 Saved model to {model_path}")
+            model_path = os.path.join(save_dir, f"gat_{dtype}.pt")
+            torch.save(model.state_dict(), model_path)
+            print(f"💾 Saved model to {model_path}")
 
-        evaluate_gat(data, model, device)
+            evaluate_gat(data, model, device)
 
 if __name__ == "__main__":
     main()
