@@ -10,7 +10,7 @@ from tqdm import tqdm
 import cv2
 import torch.nn.functional as F
 
-cv2.utils.logging.setLogLevel(cv2.utils.logging.LOG_LEVEL_ERROR)
+cv2.setLogLevel(cv2.LOG_LEVEL_ERROR)
 
 # === Focal Loss クラス ===
 class FocalLoss(nn.Module):
