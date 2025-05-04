@@ -9,8 +9,8 @@ from torch_geometric.nn import GATConv
 from sklearn.metrics import classification_report
 
 # === 入出力パス ===
-graph_dir = "../upsample_graphs_with_image"
-save_dir = "../upsample_focal_gat_models_by_type"
+graph_dir = "./upsample_graphs_with_image"
+save_dir = "./upsample_focal_gat_models_by_type"
 os.makedirs(save_dir, exist_ok=True)
 
 class FocalLoss(nn.Module):

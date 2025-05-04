@@ -10,9 +10,9 @@ from torch_geometric.data import Data
 from tqdm import tqdm
 
 # === 入出力 ===
-graph_dir = "../upsample_graphs_by_type"
-metadata_csv = "../all_buildings_for_graph.csv"
-output_dir = "../upsample_graphs_with_image"
+graph_dir = "./upsample_graphs_by_type"
+metadata_csv = "./all_buildings_for_graph.csv"
+output_dir = "./upsample_graphs_with_image"
 os.makedirs(output_dir, exist_ok=True)
 
 # === ResNet feature extractor ===
