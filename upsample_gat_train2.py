@@ -89,4 +89,5 @@ def build_graphs(df, output_dir, k=8):
 if __name__ == "__main__":
     df_input = pd.read_csv(input_csv)
     df_oversampled = oversample_data(df_input)
+    df_oversampled.to_csv("./all_buildings_for_graph_upsampled.csv", index=False)
     build_graphs(df_oversampled, output_dir, k=8)
