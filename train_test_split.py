@@ -3,13 +3,12 @@ import os
 import random
 import pandas as pd
 
-# === パラメータ設定 ===
-pre_image_root = "./data/geotiffs"  # pre-disaster画像があるtier1/tier3のroot
+pre_image_root = "./data/geotiffs"  
 output_dir = "./split_lists"
 train_ratio = 0.8
 random_seed = 42
 
-# === 画像一覧を取得し、train/testに分割 ===
+# === train/test splitting ===
 def split_images(pre_image_root, output_dir, train_ratio=0.8, random_seed=42):
     pre_images = []
     for tier in ["tier1", "tier3", "test"]:
@@ -34,6 +33,5 @@ def split_images(pre_image_root, output_dir, train_ratio=0.8, random_seed=42):
 
     print(f"✅ Train images: {len(train_images)}, Test images: {len(test_images)}")
 
-# === 実行例 ===
 if __name__ == "__main__":
     split_images(pre_image_root, output_dir, train_ratio, random_seed)
